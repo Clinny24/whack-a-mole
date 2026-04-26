@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: linear-gradient(135deg, #87CEEB, #4a8c2a);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: white;
+  }
+  h1 { margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+  .stats {
+    display: flex;
+    gap: 30px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: min(90vw, 400px);
+    aspect-ratio: 1;
+  }
+  .hole {
+    background: #3a2817;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 10px 20px rgba(0,0,0,0.6);
+    cursor: pointer;
+  }
+  .mole {
+    position: absolute;
+    bottom: -100%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background: #8B4513;
+    border-radius: 50% 50% 40% 40%;
+    transition: bottom 0.15s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+  }
+  .mole.up { bottom: 10%; }
+  .mole.hit { background: #c0392b; transform: scale(0.9); }
+  button {
+    margin-top: 20px;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #c0392b;
+  }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0392b; }
+  .message { margin-top: 15px; font-size: 1.3rem; min-height: 1.5em; }
+</style>
+</head>
+<body>
+  <h1>🔨 Whack-a-Mole</h1>
+  <div class="stats">
+    <div>Score: <span id="score">0</span></div>
+    <div>Time: <span id="time">30</span>s</div>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+    <div class="hole"><div class="mole">🐹</div></div>
+  </div>
+
+  <div class="message" id="message">Click Start to play!</div>
+  <button id="startBtn">Start Game</button>
+
+<script>
+  const moles = document.querySelectorAll('.mole');
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const messageEl = document.getElementById('message');
+  const startBtn = document.getElementById('startBtn');
+
+  let score = 0;
+  let timeLeft = 30;
+  let gameRunning = false;
+  let activeMole = null;
+  let popTimeout = null;
+  let gameTimer = null;
+
+  function popMole() {
+    if (!gameRunning) return;
+    if (activeMole) activeMole.classList.remove('up');
+    const i = Math.floor(Math.random() * moles.length);
+    activeMole = moles[i];
+    activeMole.classList.remove('hit');
+    activeMole.classList.add('up');
+    const delay = 600 + Math.random() * 700;
+    popTimeout = setTimeout(popMole, delay);
+  }
+
+  moles.forEach(mole => {
+    mole.addEventListener('click', () => {
+      if (!gameRunning || !mole.classList.contains('up')) return;
+      score++;
+      scoreEl.textContent = score;
+      mole.classList.add('hit');
+      mole.classList.remove('up');
+    });
+  });
+
+  function startGame() {
+    score = 0;
+    timeLeft = 30;
+    gameRunning = true;
+    scoreEl.textContent = score;
+    timeEl.textContent = timeLeft;
+    messageEl.textContent = 'Go! Whack those moles!';
+    startBtn.disabled = true;
+    startBtn.style.opacity = 0.5;
+
+    popMole();
+
+    gameTimer = setInterval(() => {
+      timeLeft--;
+      timeEl.textContent = timeLeft;
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+  }
+
+  function endGame() {
+    gameRunning = false;
+    clearInterval(gameTimer);
+    clearTimeout(popTimeout);
+    moles.forEach(m => m.classList.remove('up'));
+    messageEl.textContent = `Game over! Final score: ${score}`;
+    startBtn.disabled = false;
+    startBtn.style.opacity = 1;
+    startBtn.textContent = 'Play Again';
+  }
+
+  startBtn.addEventListener('click', startGame);
+</script>
+</body>
+</html>
